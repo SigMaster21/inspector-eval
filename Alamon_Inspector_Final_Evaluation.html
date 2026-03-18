@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Alamon Inspector Trainee - Final Field Evaluation</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #1a5276;
+  --primary-light: #2980b9;
+  --success: #27ae60;
+  --danger: #e74c3c;
+  --warning: #f39c12;
+  --bg: #f5f6fa;
+  --card: #fff;
+  --text: #2c3e50;
+  --border: #dcdde1;
+  --star-empty: #ccc;
+  --star-filled: #f39c12;
+}
+html { font-size: 16px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  padding-bottom: 70px;
+}
+h1 {
+  background: var(--primary);
+  color: #fff;
+  padding: 16px;
+  font-size: 1.1rem;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.toolbar {
+  display: flex;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--primary-light);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.toolbar button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  min-height: 44px;
+}
+.toolbar button:active { background: rgba(255,255,255,0.35); }
+
+/* Sections */
+.section {
+  margin: 8px;
+  background: var(--card);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+  min-height: 48px;
+  -webkit-tap-highlight-color: transparent;
+}
+.section-header h2 { font-size: 0.95rem; flex: 1; }
+.section-header .chevron {
+  font-size: 1.2rem;
+  transition: transform 0.2s;
+  margin-left: 8px;
+}
+.section-header.collapsed .chevron { transform: rotate(-90deg); }
+.section-body { padding: 12px; }
+.section-body.hidden { display: none; }
+
+/* Subsections */
+.subsection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #ecf0f1;
+  border-radius: 6px;
+  margin: 8px 0 4px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.9rem;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+}
+.subsection-header .chevron { font-size: 1rem; transition: transform 0.2s; }
+.subsection-header.collapsed .chevron { transform: rotate(-90deg); }
+.subsection-body.hidden { display: none; }
+
+/* Form fields */
+.field-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 0;
+}
+.field {
+  flex: 1 1 calc(50% - 10px);
+  min-width: 140px;
+}
+.field label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #7f8c8d;
+  margin-bottom: 4px;
+}
+.field input, .field select, .field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #fff;
+  -webkit-appearance: none;
+}
+.field textarea { resize: vertical; min-height: 80px; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(41,128,185,0.15);
+}
+
+/* Promote toggle */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+.toggle-switch {
+  position: relative;
+  width: 56px;
+  height: 30px;
+  flex-shrink: 0;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--danger);
+  border-radius: 30px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 24px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--success); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(26px); }
+.toggle-label { font-weight: 600; font-size: 0.95rem; }
+
+/* Star rating */
+.eval-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.eval-item:last-child { border-bottom: none; }
+.eval-item-label { font-weight: 600; font-size: 0.95rem; margin-bottom: 6px; }
+.stars {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+.star {
+  font-size: 2rem;
+  cursor: pointer;
+  color: var(--star-empty);
+  line-height: 1;
+  padding: 2px;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.star.filled { color: var(--star-filled); }
+.eval-item input[type="text"] {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+.eval-item input[type="text"]:focus {
+  outline: none;
+  border-color: var(--primary-light);
+}
+
+/* Pass/Fail toggle */
+.pf-toggle {
+  display: flex;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid var(--border);
+  margin-bottom: 6px;
+  max-width: 200px;
+}
+.pf-btn {
+  flex: 1;
+  padding: 10px 0;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8f8f8;
+  color: #999;
+  border: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition: 0.2s;
+}
+.pf-btn.pass.active { background: var(--success); color: #fff; }
+.pf-btn.fail.active { background: var(--danger); color: #fff; }
+
+/* Training checklist */
+.training-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f0f0f0;
+  flex-wrap: wrap;
+}
+.training-item:last-child { border-bottom: none; }
+.training-check {
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  accent-color: var(--success);
+  flex-shrink: 0;
+}
+.training-label { flex: 1; font-size: 0.95rem; font-weight: 500; min-width: 150px; }
+.training-date {
+  width: 130px;
+  padding: 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+.training-date:focus {
+  outline: none;
+  border-color: var(--primary-light);
+}
+
+/* Signature */
+.sig-block { margin: 12px 0; }
+.sig-label { font-weight: 600; margin-bottom: 6px; font-size: 0.95rem; }
+.sig-canvas {
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  width: 100%;
+  height: 120px;
+  touch-action: none;
+  cursor: crosshair;
+  background: #fafafa;
+}
+.sig-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+.sig-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-height: 44px;
+}
+.sig-date {
+  padding: 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  width: 130px;
+}
+
+/* Sticky score bar */
+.score-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--primary);
+  color: #fff;
+  display: flex;
+  justify-content: space-around;
+  padding: 8px 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  z-index: 100;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+}
+.score-item { text-align: center; line-height: 1.3; }
+.score-item .score-val { font-size: 1.1rem; }
+
+/* Print styles */
+@media print {
+  body { padding-bottom: 0; background: #fff; }
+  h1 { position: static; }
+  .toolbar, .score-bar, .sig-actions button, .pf-btn { break-inside: avoid; }
+  .toolbar { display: none; }
+  .score-bar { position: static; background: #333; margin-top: 20px; }
+  .section-body.hidden { display: block !important; }
+  .subsection-body.hidden { display: block !important; }
+  .section-header .chevron { display: none; }
+  .subsection-header .chevron { display: none; }
+  .section { break-inside: avoid; box-shadow: none; border: 1px solid #ccc; }
+  .sig-canvas { border: 1px solid #999; }
+}
+</style>
+</head>
+<body>
+
+<h1>ALAMON INSPECTOR TRAINEE<br>FINAL FIELD EVALUATION</h1>
+<div class="toolbar">
+  <button onclick="exportCSV()">Export CSV</button>
+  <button onclick="clearAutoSave()">Clear Saved</button>
+  <button onclick="window.print()">Print</button>
+</div>
+
+<!-- HEADER METADATA -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h2>Evaluation Info</h2>
+    <span class="chevron">&#9660;</span>
+  </div>
+  <div class="section-body">
+    <div class="field-group">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="eval-date" data-save="eval-date">
+      </div>
+      <div class="field">
+        <label>Trainee</label>
+        <input type="text" id="trainee" data-save="trainee" placeholder="Trainee name">
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="field">
+        <label>Project</label>
+        <input type="text" id="project" data-save="project" placeholder="Project name">
+      </div>
+      <div class="field">
+        <label>Evaluator</label>
+        <input type="text" id="evaluator" data-save="evaluator" placeholder="Evaluator name">
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="field">
+        <label>Alamon Field Trainer</label>
+        <input type="text" id="field-trainer" data-save="field-trainer" placeholder="Field trainer name">
+      </div>
+      <div class="field">
+        <label>Recommendation</label>
+        <input type="text" id="recommendation" data-save="recommendation" placeholder="Recommendation">
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="field">
+        <label>Promote</label>
+        <div class="toggle-container">
+          <label class="toggle-switch">
+            <input type="checkbox" id="promote" data-save="promote">
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="toggle-label" id="promote-label">No</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 1: PERSONALITY ATTRIBUTES -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h2>Section 1: Personality Attributes</h2>
+    <span class="chevron">&#9660;</span>
+  </div>
+  <div class="section-body" id="section1-body"></div>
+</div>
+
+<!-- SECTION 2: SAFETY & PERFORMANCE -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h2>Section 2: Safety &amp; Performance</h2>
+    <span class="chevron">&#9660;</span>
+  </div>
+  <div class="section-body" id="section2-body"></div>
+</div>
+
+<!-- SECTION 3: TRAINING CHECKLIST -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h2>Section 3: Training Checklist</h2>
+    <span class="chevron">&#9660;</span>
+  </div>
+  <div class="section-body" id="section3-body"></div>
+</div>
+
+<!-- EVALUATOR COMMENTS & SIGNATURES -->
+<div class="section">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h2>Comments &amp; Signatures</h2>
+    <span class="chevron">&#9660;</span>
+  </div>
+  <div class="section-body">
+    <div class="field" style="margin-bottom:12px">
+      <label>Evaluator Comments</label>
+      <textarea id="eval-comments" data-save="eval-comments" placeholder="Enter comments..."></textarea>
+    </div>
+    <div class="sig-block">
+      <div class="sig-label">Trainee Signature</div>
+      <canvas class="sig-canvas" id="sig-trainee"></canvas>
+      <div class="sig-actions">
+        <button onclick="clearSig('sig-trainee')">Clear</button>
+        <label style="font-size:0.85rem;font-weight:600;color:#7f8c8d">Date:</label>
+        <input type="date" class="sig-date" id="sig-trainee-date" data-save="sig-trainee-date">
+      </div>
+    </div>
+    <div class="sig-block">
+      <div class="sig-label">Evaluator Signature</div>
+      <canvas class="sig-canvas" id="sig-evaluator"></canvas>
+      <div class="sig-actions">
+        <button onclick="clearSig('sig-evaluator')">Clear</button>
+        <label style="font-size:0.85rem;font-weight:600;color:#7f8c8d">Date:</label>
+        <input type="date" class="sig-date" id="sig-evaluator-date" data-save="sig-evaluator-date">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCORE BAR -->
+<div class="score-bar">
+  <div class="score-item">Personality<br><span class="score-val" id="score-s1">0.0</span>/5</div>
+  <div class="score-item">Safety<br><span class="score-val" id="score-s2">0</span>/23</div>
+  <div class="score-item">Training<br><span class="score-val" id="score-s3">0</span>/18</div>
+  <div class="score-item">Overall<br><span class="score-val" id="score-overall">0%</span></div>
+</div>
+
+<script>
+// ============ DATA ============
+const personalityItems = [
+  'Integrity','Productivity','Punctuality','Attendance','Team Player',
+  'Demeanor','Dependability','Initiative','Motivation','Communication'
+];
+
+const safetySubsections = [
+  { name: 'VEHICLE OPERATIONS', items: [
+    'Roadside safety requierments(Hazards, Beacon, Flags, Signs, Hi-Vis)',
+    'Obeys all traffic laws and company policies while driving',
+    'Driver uses a spotter when backing the vehicle, when one is available',
+    'Performs circle of safety before moving vehicle'
+  ]},
+  { name: 'INFIELD SAFETY', items: [
+    'Properly filled out JSA and Mitigation respose',
+    'Wears all proper PPE',
+    'Is prepared for weather conditions',
+    'Maintains professional conduct with public/customer'
+  ]},
+  { name: 'COMPANY POLICY COMPLIANCE', items: [
+    'Truck trasfer completed & understands proper procedures',
+    'Proper Paycor procedures (Live punches, breaks, first to last pole)',
+    'Understands basic pesticide transportaion and law requirments',
+    'Understands were SDS sheets are found'
+  ]},
+  { name: 'TOOLS & EQUIPMENT', items: [
+    'Carries all necessary inspection tools & supplies to pole',
+    'Proper tool maintenance',
+    'Proper tool stoarge'
+  ]},
+  { name: 'PLANNING, SETUP, & ORGANIZATION', items: [
+    'Plans out daily work and able to communicate plan',
+    'Trainee shows a solid routine at every pole',
+    'Trainee starts and ends efficently with sending daily report'
+  ]},
+  { name: 'WORK PRACTICES', items: [
+    'Water avalible on their truck',
+    'Production was no more than 15% off Goal pace',
+    'Identify correct pole to inspect',
+    'Understand how to operate mapping on Alatrac',
+    'Accurate decay identification'
+  ]}
+];
+
+const trainingItems = [
+  'Proper PPE Use','Incident Reporting','Tools of the Trade','18-Step Pole Process',
+  'Pole Strength ID','Pole Restoration Criteria','Excavation & Depth','Decay Identification',
+  'Chipping / Site Cleanup','Overhead Safety','Pesticide Application','Internal Treatments',
+  'SDS / Chemical Safety','Vehicle Policy','Time Entry (Paycor) Admin/Standard Time',
+  'Professionalism','Ramp Expenses/ Lodging Policy','Travel Policy and Home Time'
+];
+
+const STORAGE_KEY = 'alamon_eval_v1';
+
+// ============ INIT ============
+document.addEventListener('DOMContentLoaded', () => {
+  buildSection1();
+  buildSection2();
+  buildSection3();
+  initSignatureCanvases();
+  setDefaultDates();
+  tryRestore();
+  updateScores();
+  document.getElementById('promote').addEventListener('change', function() {
+    document.getElementById('promote-label').textContent = this.checked ? 'Yes' : 'No';
+    autoSave();
+  });
+  document.querySelectorAll('[data-save]').forEach(el => {
+    el.addEventListener('input', () => { autoSave(); updateScores(); });
+    el.addEventListener('change', () => { autoSave(); updateScores(); });
+  });
+});
+
+function setDefaultDates() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('eval-date').value = today;
+  document.getElementById('sig-trainee-date').value = today;
+  document.getElementById('sig-evaluator-date').value = today;
+}
+
+// ============ SECTION 1 ============
+function buildSection1() {
+  const container = document.getElementById('section1-body');
+  personalityItems.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'eval-item';
+    div.innerHTML = `
+      <div class="eval-item-label">${item}</div>
+      <div class="stars" data-rating="s1-${idx}" data-save="s1-${idx}">
+        ${[1,2,3,4,5].map(n => `<span class="star" data-val="${n}" onclick="setRating('s1-${idx}',${n})">&#9733;</span>`).join('')}
+      </div>
+      <input type="text" placeholder="Notes (optional)" data-save="s1-${idx}-notes">
+    `;
+    container.appendChild(div);
+  });
+}
+
+function setRating(key, val) {
+  const container = document.querySelector(`[data-rating="${key}"]`);
+  const current = parseInt(container.dataset.value || '0');
+  const newVal = (current === val) ? 0 : val;
+  container.dataset.value = newVal;
+  container.querySelectorAll('.star').forEach(s => {
+    s.classList.toggle('filled', parseInt(s.dataset.val) <= newVal);
+  });
+  autoSave();
+  updateScores();
+}
+
+// ============ SECTION 2 ============
+function buildSection2() {
+  const container = document.getElementById('section2-body');
+  let globalIdx = 0;
+  safetySubsections.forEach((sub, si) => {
+    const subDiv = document.createElement('div');
+    subDiv.innerHTML = `
+      <div class="subsection-header" onclick="toggleSubsection(this)">
+        <span>${sub.name}</span>
+        <span class="chevron">&#9660;</span>
+      </div>
+      <div class="subsection-body" id="sub-${si}"></div>
+    `;
+    container.appendChild(subDiv);
+    const body = subDiv.querySelector('.subsection-body');
+    sub.items.forEach((item, ii) => {
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'eval-item';
+      const pfKey = `s2-${globalIdx}`;
+      itemDiv.innerHTML = `
+        <div class="eval-item-label">${item}</div>
+        <div class="pf-toggle" data-pf="${pfKey}" data-save="${pfKey}">
+          <button class="pf-btn pass" onclick="setPF('${pfKey}','pass')">PASS</button>
+          <button class="pf-btn fail" onclick="setPF('${pfKey}','fail')">FAIL</button>
+        </div>
+        <input type="text" placeholder="Comments (optional)" data-save="${pfKey}-comments">
+      `;
+      body.appendChild(itemDiv);
+      globalIdx++;
+    });
+  });
+}
+
+function setPF(key, val) {
+  const container = document.querySelector(`[data-pf="${key}"]`);
+  const current = container.dataset.value;
+  if (current === val) {
+    container.dataset.value = '';
+    container.querySelectorAll('.pf-btn').forEach(b => b.classList.remove('active'));
+  } else {
+    container.dataset.value = val;
+    container.querySelectorAll('.pf-btn').forEach(b => {
+      b.classList.toggle('active', b.classList.contains(val));
+    });
+  }
+  autoSave();
+  updateScores();
+}
+
+// ============ SECTION 3 ============
+function buildSection3() {
+  const container = document.getElementById('section3-body');
+  trainingItems.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'training-item';
+    div.innerHTML = `
+      <input type="checkbox" class="training-check" id="t3-${idx}" data-save="t3-${idx}" onchange="onTrainingCheck(this, 't3-${idx}-date')">
+      <label class="training-label" for="t3-${idx}">${item}</label>
+      <input type="date" class="training-date" id="t3-${idx}-date" data-save="t3-${idx}-date">
+    `;
+    container.appendChild(div);
+  });
+}
+
+function onTrainingCheck(cb, dateId) {
+  if (cb.checked) {
+    const dateInput = document.getElementById(dateId);
+    if (!dateInput.value) {
+      dateInput.value = new Date().toISOString().split('T')[0];
+    }
+  }
+  autoSave();
+  updateScores();
+}
+
+// ============ SECTIONS TOGGLE ============
+function toggleSection(header) {
+  header.classList.toggle('collapsed');
+  const body = header.nextElementSibling;
+  body.classList.toggle('hidden');
+}
+
+function toggleSubsection(header) {
+  header.classList.toggle('collapsed');
+  const body = header.nextElementSibling;
+  body.classList.toggle('hidden');
+}
+
+// ============ SCORES ============
+function updateScores() {
+  // Section 1: avg of filled star ratings
+  let s1Total = 0, s1Count = 0;
+  for (let i = 0; i < personalityItems.length; i++) {
+    const el = document.querySelector(`[data-rating="s1-${i}"]`);
+    const v = parseInt(el?.dataset.value || '0');
+    if (v > 0) { s1Total += v; s1Count++; }
+  }
+  const s1Avg = s1Count > 0 ? (s1Total / s1Count) : 0;
+  document.getElementById('score-s1').textContent = s1Avg.toFixed(1);
+
+  // Section 2: count of passes
+  let s2Pass = 0;
+  let totalSafetyItems = 0;
+  safetySubsections.forEach(s => totalSafetyItems += s.items.length);
+  for (let i = 0; i < totalSafetyItems; i++) {
+    const el = document.querySelector(`[data-pf="s2-${i}"]`);
+    if (el?.dataset.value === 'pass') s2Pass++;
+  }
+  document.getElementById('score-s2').textContent = s2Pass;
+
+  // Section 3: count of checked
+  let s3Count = 0;
+  for (let i = 0; i < trainingItems.length; i++) {
+    if (document.getElementById(`t3-${i}`).checked) s3Count++;
+  }
+  document.getElementById('score-s3').textContent = s3Count;
+
+  // Overall: weighted
+  const s1Pct = s1Count > 0 ? (s1Avg / 5) * 100 : 0;
+  const s2Pct = (s2Pass / totalSafetyItems) * 100;
+  const s3Pct = (s3Count / trainingItems.length) * 100;
+  const overall = (s1Pct + s2Pct + s3Pct) / 3;
+  document.getElementById('score-overall').textContent = overall.toFixed(1) + '%';
+}
+
+// ============ SIGNATURES ============
+function initSignatureCanvases() {
+  ['sig-trainee', 'sig-evaluator'].forEach(id => {
+    const canvas = document.getElementById(id);
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    let lastX, lastY;
+
+    function resize() {
+      const data = canvas.toDataURL();
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0);
+      img.src = data;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches ? e.touches[0] : e;
+      return [touch.clientX - rect.left, touch.clientY - rect.top];
+    }
+
+    function startDraw(e) {
+      e.preventDefault();
+      drawing = true;
+      [lastX, lastY] = getPos(e);
+    }
+    function draw(e) {
+      if (!drawing) return;
+      e.preventDefault();
+      const [x, y] = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(x, y);
+      ctx.strokeStyle = '#000';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+      lastX = x; lastY = y;
+    }
+    function endDraw(e) {
+      if (drawing) {
+        drawing = false;
+        autoSave();
+      }
+    }
+
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', endDraw);
+  });
+}
+
+function clearSig(id) {
+  const canvas = document.getElementById(id);
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  autoSave();
+}
+
+// ============ AUTO-SAVE ============
+function gatherState() {
+  const state = {};
+  // Simple inputs
+  document.querySelectorAll('[data-save]').forEach(el => {
+    const key = el.dataset.save;
+    if (el.type === 'checkbox') {
+      state[key] = el.checked;
+    } else if (el.dataset.rating !== undefined) {
+      state[key] = el.dataset.value || '';
+    } else if (el.dataset.pf !== undefined) {
+      state[key] = el.dataset.value || '';
+    } else {
+      state[key] = el.value;
+    }
+  });
+  // Star ratings
+  personalityItems.forEach((_, i) => {
+    const el = document.querySelector(`[data-rating="s1-${i}"]`);
+    state[`s1-${i}`] = el?.dataset.value || '';
+  });
+  // PF toggles
+  let gi = 0;
+  safetySubsections.forEach(s => {
+    s.items.forEach(() => {
+      const el = document.querySelector(`[data-pf="s2-${gi}"]`);
+      state[`s2-${gi}`] = el?.dataset.value || '';
+      gi++;
+    });
+  });
+  // Signatures
+  ['sig-trainee', 'sig-evaluator'].forEach(id => {
+    const canvas = document.getElementById(id);
+    state[id] = canvas.toDataURL();
+  });
+  return state;
+}
+
+function autoSave() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(gatherState()));
+  } catch(e) {}
+}
+
+function tryRestore() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    if (!confirm('A previous evaluation was found. Restore it?')) return;
+    const state = JSON.parse(raw);
+    // Restore simple inputs
+    document.querySelectorAll('[data-save]').forEach(el => {
+      const key = el.dataset.save;
+      if (!(key in state)) return;
+      if (el.type === 'checkbox') {
+        el.checked = state[key];
+      } else if (el.dataset.rating === undefined && el.dataset.pf === undefined) {
+        el.value = state[key];
+      }
+    });
+    // Promote label
+    document.getElementById('promote-label').textContent =
+      document.getElementById('promote').checked ? 'Yes' : 'No';
+    // Stars
+    personalityItems.forEach((_, i) => {
+      const v = parseInt(state[`s1-${i}`] || '0');
+      if (v > 0) {
+        const container = document.querySelector(`[data-rating="s1-${i}"]`);
+        container.dataset.value = v;
+        container.querySelectorAll('.star').forEach(s => {
+          s.classList.toggle('filled', parseInt(s.dataset.val) <= v);
+        });
+      }
+    });
+    // PF
+    let gi = 0;
+    safetySubsections.forEach(s => {
+      s.items.forEach(() => {
+        const val = state[`s2-${gi}`];
+        if (val) {
+          const container = document.querySelector(`[data-pf="s2-${gi}"]`);
+          container.dataset.value = val;
+          container.querySelectorAll('.pf-btn').forEach(b => {
+            b.classList.toggle('active', b.classList.contains(val));
+          });
+        }
+        gi++;
+      });
+    });
+    // Signatures
+    ['sig-trainee', 'sig-evaluator'].forEach(id => {
+      if (state[id]) {
+        const canvas = document.getElementById(id);
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        img.onload = () => ctx.drawImage(img, 0, 0);
+        img.src = state[id];
+      }
+    });
+    updateScores();
+  } catch(e) {}
+}
+
+function clearAutoSave() {
+  if (confirm('Clear all saved data and reset the form?')) {
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  }
+}
+
+// ============ CSV EXPORT ============
+function csvEscape(val) {
+  val = String(val || '');
+  if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+    return '"' + val.replace(/"/g, '""') + '"';
+  }
+  return val;
+}
+
+function exportCSV() {
+  const d = id => document.getElementById(id)?.value || '';
+  const rows = [];
+  rows.push(['ALAMON INSPECTOR TRAINEE - FINAL FIELD EVALUATION','','','']);
+  rows.push(['','','','']);
+  rows.push(['Date:', d('eval-date'), 'Trainee:', d('trainee')]);
+  rows.push(['Project:', d('project'), 'Evaluator:', d('evaluator')]);
+  rows.push(['Alamon Field Trainer:', d('field-trainer'), 'Recommendation:', d('recommendation')]);
+  rows.push(['', '', 'Promote: (Yes/No)', document.getElementById('promote').checked ? 'Yes' : 'No']);
+
+  // Section 1
+  rows.push(['SECTION 1: PERSONALITY ATTRIBUTES ','','','']);
+  rows.push(['', '', 'SCORE (1-5)', 'NOTES']);
+  personalityItems.forEach((item, i) => {
+    const rating = document.querySelector(`[data-rating="s1-${i}"]`)?.dataset.value || '';
+    const notes = document.querySelector(`[data-save="s1-${i}-notes"]`)?.value || '';
+    rows.push(['', item, rating, notes]);
+  });
+  rows.push(['','','','']);
+
+  // Section 2
+  rows.push(['SECTION 2: SAFETY & PERFORMANCE EVALUATION','','','']);
+  let gi = 0;
+  safetySubsections.forEach((sub) => {
+    if (gi === 0) {
+      rows.push([sub.name, '', 'SCORE (1/0)', 'COMMENTS']);
+    } else {
+      rows.push([sub.name, '', '', '']);
+    }
+    sub.items.forEach((item) => {
+      const el = document.querySelector(`[data-pf="s2-${gi}"]`);
+      const val = el?.dataset.value || '';
+      const score = val === 'pass' ? '1' : val === 'fail' ? '0' : '';
+      const comments = document.querySelector(`[data-save="s2-${gi}-comments"]`)?.value || '';
+      rows.push(['', item, score, comments]);
+      gi++;
+    });
+  });
+  rows.push(['','','','']);
+
+  // Section 3
+  rows.push(['SECTION 3: TRAINING CHECKLIST','','','']);
+  rows.push(['', 'Course Completion Review', 'COMPLETED (X)', 'DATE']);
+  trainingItems.forEach((item, i) => {
+    const checked = document.getElementById(`t3-${i}`).checked ? 'X' : '';
+    const date = document.getElementById(`t3-${i}-date`).value || '';
+    rows.push(['', item, checked, date]);
+  });
+
+  // Comments
+  rows.push(['EVALUATOR COMMENTS:', d('eval-comments'), '', '']);
+  rows.push(['','','','']);
+  rows.push(['Trainee Signature:', '_______________________', 'Date:', d('sig-trainee-date')]);
+  rows.push(['Evaluator Signature:', '_______________________', 'Date:', d('sig-evaluator-date')]);
+  rows.push(['','','','']);
+
+  // Scoring summary
+  const s1Avg = document.getElementById('score-s1').textContent;
+  const s2Raw = document.getElementById('score-s2').textContent;
+  const overall = document.getElementById('score-overall').textContent;
+  rows.push(['AUTOMATED SCORING SUMMARY','','','']);
+  rows.push(['', 'Section 1: Performance Avg (Scale 1-5)', s1Avg, '']);
+  rows.push(['', 'Section 2: Safety Compliance (Raw Count)', s2Raw, '']);
+  rows.push(['', 'OVERALL EVALUATION PERCENTAGE', overall, '']);
+
+  const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const trainee = d('trainee').replace(/[^a-zA-Z0-9]/g, '_') || 'Unknown';
+  const date = d('eval-date') || new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = `Evaluation_${trainee}_${date}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>
