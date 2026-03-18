@@ -354,6 +354,8 @@ h1 {
 <h1>ALAMON INSPECTOR TRAINEE<br>FINAL FIELD EVALUATION</h1>
 <div class="toolbar">
   <button onclick="exportCSV()">Export CSV</button>
+  <button onclick="emailForm()">Email</button>
+  <button onclick="shareForm()">Share</button>
   <button onclick="clearAutoSave()">Clear Saved</button>
   <button onclick="window.print()">Print</button>
 </div>
@@ -900,6 +902,75 @@ function csvEscape(val) {
 }
 
 function exportCSV() {
+  const { blob, filename } = getCSVBlob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ============ FORM SUMMARY ============
+function buildSummaryText() {
+  const d = id => document.getElementById(id)?.value || '';
+  const lines = [];
+  lines.push('ALAMON INSPECTOR TRAINEE - FINAL FIELD EVALUATION');
+  lines.push('');
+  lines.push(`Date: ${d('eval-date')}  |  Trainee: ${d('trainee')}`);
+  lines.push(`Project: ${d('project')}  |  Evaluator: ${d('evaluator')}`);
+  lines.push(`Field Trainer: ${d('field-trainer')}  |  Recommendation: ${d('recommendation')}`);
+  lines.push(`Promote: ${document.getElementById('promote').checked ? 'Yes' : 'No'}`);
+  lines.push('');
+
+  lines.push('--- SECTION 1: PERSONALITY ATTRIBUTES ---');
+  personalityItems.forEach((item, i) => {
+    const rating = document.querySelector(`[data-rating="s1-${i}"]`)?.dataset.value || '-';
+    const notes = document.querySelector(`[data-save="s1-${i}-notes"]`)?.value || '';
+    lines.push(`  ${item}: ${rating}/5${notes ? '  (' + notes + ')' : ''}`);
+  });
+  lines.push('');
+
+  lines.push('--- SECTION 2: SAFETY & PERFORMANCE ---');
+  let gi = 0;
+  safetySubsections.forEach(sub => {
+    lines.push(`  [${sub.name}]`);
+    sub.items.forEach(item => {
+      const el = document.querySelector(`[data-pf="s2-${gi}"]`);
+      const val = el?.dataset.value || '-';
+      const display = val === 'pass' ? 'PASS' : val === 'fail' ? 'FAIL' : '-';
+      const comments = document.querySelector(`[data-save="s2-${gi}-comments"]`)?.value || '';
+      lines.push(`    ${item}: ${display}${comments ? '  (' + comments + ')' : ''}`);
+      gi++;
+    });
+  });
+  lines.push('');
+
+  lines.push('--- SECTION 3: TRAINING CHECKLIST ---');
+  trainingItems.forEach((item, i) => {
+    const checked = document.getElementById(`t3-${i}`).checked ? 'X' : ' ';
+    const date = document.getElementById(`t3-${i}-date`).value || '';
+    lines.push(`  [${checked}] ${item}${date ? '  (' + date + ')' : ''}`);
+  });
+  lines.push('');
+
+  const comments = d('eval-comments');
+  if (comments) {
+    lines.push('--- EVALUATOR COMMENTS ---');
+    lines.push(comments);
+    lines.push('');
+  }
+
+  lines.push('--- SCORES ---');
+  lines.push(`  Personality Avg: ${document.getElementById('score-s1').textContent}/5`);
+  lines.push(`  Safety: ${document.getElementById('score-s2').textContent}/23`);
+  lines.push(`  Training: ${document.getElementById('score-s3').textContent}/18`);
+  lines.push(`  Overall: ${document.getElementById('score-overall').textContent}`);
+
+  return lines.join('\n');
+}
+
+function getCSVBlob() {
   const d = id => document.getElementById(id)?.value || '';
   const rows = [];
   rows.push(['ALAMON INSPECTOR TRAINEE - FINAL FIELD EVALUATION','','','']);
@@ -908,8 +979,6 @@ function exportCSV() {
   rows.push(['Project:', d('project'), 'Evaluator:', d('evaluator')]);
   rows.push(['Alamon Field Trainer:', d('field-trainer'), 'Recommendation:', d('recommendation')]);
   rows.push(['', '', 'Promote: (Yes/No)', document.getElementById('promote').checked ? 'Yes' : 'No']);
-
-  // Section 1
   rows.push(['SECTION 1: PERSONALITY ATTRIBUTES ','','','']);
   rows.push(['', '', 'SCORE (1-5)', 'NOTES']);
   personalityItems.forEach((item, i) => {
@@ -918,8 +987,6 @@ function exportCSV() {
     rows.push(['', item, rating, notes]);
   });
   rows.push(['','','','']);
-
-  // Section 2
   rows.push(['SECTION 2: SAFETY & PERFORMANCE EVALUATION','','','']);
   let gi = 0;
   safetySubsections.forEach((sub) => {
@@ -938,8 +1005,6 @@ function exportCSV() {
     });
   });
   rows.push(['','','','']);
-
-  // Section 3
   rows.push(['SECTION 3: TRAINING CHECKLIST','','','']);
   rows.push(['', 'Course Completion Review', 'COMPLETED (X)', 'DATE']);
   trainingItems.forEach((item, i) => {
@@ -947,15 +1012,11 @@ function exportCSV() {
     const date = document.getElementById(`t3-${i}-date`).value || '';
     rows.push(['', item, checked, date]);
   });
-
-  // Comments
   rows.push(['EVALUATOR COMMENTS:', d('eval-comments'), '', '']);
   rows.push(['','','','']);
   rows.push(['Trainee Signature:', '_______________________', 'Date:', d('sig-trainee-date')]);
   rows.push(['Evaluator Signature:', '_______________________', 'Date:', d('sig-evaluator-date')]);
   rows.push(['','','','']);
-
-  // Scoring summary
   const s1Avg = document.getElementById('score-s1').textContent;
   const s2Raw = document.getElementById('score-s2').textContent;
   const overall = document.getElementById('score-overall').textContent;
@@ -963,17 +1024,66 @@ function exportCSV() {
   rows.push(['', 'Section 1: Performance Avg (Scale 1-5)', s1Avg, '']);
   rows.push(['', 'Section 2: Safety Compliance (Raw Count)', s2Raw, '']);
   rows.push(['', 'OVERALL EVALUATION PERCENTAGE', overall, '']);
-
   const csv = rows.map(r => r.map(csvEscape).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
   const trainee = d('trainee').replace(/[^a-zA-Z0-9]/g, '_') || 'Unknown';
   const date = d('eval-date') || new Date().toISOString().split('T')[0];
-  a.href = url;
-  a.download = `Evaluation_${trainee}_${date}.csv`;
-  a.click();
-  URL.revokeObjectURL(url);
+  const filename = `Evaluation_${trainee}_${date}.csv`;
+  return { blob: new Blob([csv], { type: 'text/csv' }), filename, csv };
+}
+
+// ============ EMAIL ============
+function emailForm() {
+  const d = id => document.getElementById(id)?.value || '';
+  const trainee = d('trainee') || 'Unknown';
+  const date = d('eval-date') || new Date().toISOString().split('T')[0];
+  const subject = encodeURIComponent(`Inspector Evaluation - ${trainee} - ${date}`);
+  const body = encodeURIComponent(buildSummaryText());
+  window.location.href = `mailto:?subject=${subject}&body=${body}`;
+}
+
+// ============ SHARE ============
+async function shareForm() {
+  const d = id => document.getElementById(id)?.value || '';
+  const trainee = d('trainee') || 'Unknown';
+  const date = d('eval-date') || new Date().toISOString().split('T')[0];
+  const title = `Inspector Evaluation - ${trainee} - ${date}`;
+
+  if (navigator.share) {
+    const { blob, filename } = getCSVBlob();
+    const file = new File([blob], filename, { type: 'text/csv' });
+    const shareData = { title, text: buildSummaryText() };
+
+    // Check if file sharing is supported
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      shareData.files = [file];
+    }
+
+    try {
+      await navigator.share(shareData);
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        alert('Share failed: ' + err.message);
+      }
+    }
+  } else {
+    // Fallback: copy summary to clipboard
+    const text = buildSummaryText();
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('Form summary copied to clipboard. Paste it into an email, message, or document.');
+    } catch (err) {
+      // Final fallback: select text in a textarea
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      alert('Form summary copied to clipboard.');
+    }
+  }
 }
 </script>
 </body>
