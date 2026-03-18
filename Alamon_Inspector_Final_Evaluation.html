@@ -475,7 +475,6 @@ h1 {
 <div class="score-bar">
   <div class="score-item">Personality<br><span class="score-val" id="score-s1">0.0</span>/5</div>
   <div class="score-item">Safety<br><span class="score-val" id="score-s2">0</span>/23</div>
-  <div class="score-item">Training<br><span class="score-val" id="score-s3">0</span>/18</div>
   <div class="score-item">Overall<br><span class="score-val" id="score-overall">0%</span></div>
 </div>
 
@@ -488,35 +487,35 @@ const personalityItems = [
 
 const safetySubsections = [
   { name: 'VEHICLE OPERATIONS', items: [
-    'Roadside safety requierments(Hazards, Beacon, Flags, Signs, Hi-Vis)',
+    'Roadside safety requirements (Hazards, Beacon, Flags, Signs, Hi-Vis)',
     'Obeys all traffic laws and company policies while driving',
     'Driver uses a spotter when backing the vehicle, when one is available',
     'Performs circle of safety before moving vehicle'
   ]},
   { name: 'INFIELD SAFETY', items: [
-    'Properly filled out JSA and Mitigation respose',
+    'Properly filled out JSA and Mitigation response',
     'Wears all proper PPE',
     'Is prepared for weather conditions',
     'Maintains professional conduct with public/customer'
   ]},
   { name: 'COMPANY POLICY COMPLIANCE', items: [
-    'Truck trasfer completed & understands proper procedures',
+    'Truck transfer completed & understands proper procedures',
     'Proper Paycor procedures (Live punches, breaks, first to last pole)',
-    'Understands basic pesticide transportaion and law requirments',
-    'Understands were SDS sheets are found'
+    'Understands basic pesticide transportation and law requirements',
+    'Understands where SDS sheets are found'
   ]},
   { name: 'TOOLS & EQUIPMENT', items: [
     'Carries all necessary inspection tools & supplies to pole',
     'Proper tool maintenance',
-    'Proper tool stoarge'
+    'Proper tool storage'
   ]},
   { name: 'PLANNING, SETUP, & ORGANIZATION', items: [
     'Plans out daily work and able to communicate plan',
     'Trainee shows a solid routine at every pole',
-    'Trainee starts and ends efficently with sending daily report'
+    'Trainee starts and ends efficiently with sending daily report'
   ]},
   { name: 'WORK PRACTICES', items: [
-    'Water avalible on their truck',
+    'Water available on their truck',
     'Production was no more than 15% off Goal pace',
     'Identify correct pole to inspect',
     'Understand how to operate mapping on Alatrac',
@@ -699,18 +698,10 @@ function updateScores() {
   }
   document.getElementById('score-s2').textContent = s2Pass;
 
-  // Section 3: count of checked
-  let s3Count = 0;
-  for (let i = 0; i < trainingItems.length; i++) {
-    if (document.getElementById(`t3-${i}`).checked) s3Count++;
-  }
-  document.getElementById('score-s3').textContent = s3Count;
-
-  // Overall: weighted
+  // Overall: average of Section 1 and Section 2
   const s1Pct = s1Count > 0 ? (s1Avg / 5) * 100 : 0;
   const s2Pct = (s2Pass / totalSafetyItems) * 100;
-  const s3Pct = (s3Count / trainingItems.length) * 100;
-  const overall = (s1Pct + s2Pct + s3Pct) / 3;
+  const overall = (s1Pct + s2Pct) / 2;
   document.getElementById('score-overall').textContent = overall.toFixed(1) + '%';
 }
 
